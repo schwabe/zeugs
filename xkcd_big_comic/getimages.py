@@ -16,6 +16,11 @@ tiles = {}
 #	http://imgs.xkcd.com/clickdrag/${i}n${j}w.png
 h = httplib.HTTPConnection('imgs.xkcd.com')
 
+if not os.path.exists("img"):
+	os.mkdir("img")
+
+os.chdir("img") 
+
 
 def getimg(i,j):
 	a = "e"
@@ -30,27 +35,23 @@ def getimg(i,j):
 		j = -j +1
 
 	imgname = "%d%s%d%s.png" % (j,b,i,a)
-	print imgname,
+
 	if (os.path.exists(imgname)):
-		print "c"
 		return imgname
 	elif os.path.exists(imgname + ".404"):
-		print "n"
 		return None
 	else:
 		h.request("GET","http://imgs.xkcd.com/clickdrag/" + imgname)
 		r = h.getresponse()
-		print `r.reason,r.status`
+		print imgname, `r.reason,r.status`
 
 		if r.status == 404:
-			print "4"
 			f =open(imgname + ".404","w")
 			f.write(r.reason)
 			f.write(r.read())
 			f.close()
 			return None
 		else:
-			print "h"
 			data = r.read()
 			f =open(imgname,"w")
 			f.write(data)
@@ -65,6 +66,7 @@ def getTile(i,j):
 	tiles[(i,j)]=getimg(i,j)
 	if tiles[(i,j)] == None:
 		return
+	
 	for ni,nj in ((i-1,j),(i+1,j),(i,j-1),(i,j+1)):
 		if not (ni,nj) in tiles:
 			getTile(ni,nj)
@@ -87,10 +89,30 @@ tilesx, tilesy = (maxx -minx+1, maxy -miny+1)
 imgx,imgy= tilesx* 2048, tilesy*2048
 
 print imgx,imgy
+
+
+if False:
+	extraimg = []
+	for i in range(-32,49):
+		for j in range(-7,19):
+			if not (i,j) in tiles:
+				tiles[(i,j)]=getimg(i,j)
+
+				if tiles[(i,j)]:
+					extraimg.append((i,j))
+
+	print extraimg
+else:
+	extraimg = [(-8, 2), (-6, -6), (-4, -5), (1, -5), (6, -7), (10, -2), (11, 11), (12, -4), (18, -2)]
+	for x in extraimg:
+		tiles[x]=getimg(x[0],x[1])
+	
 import Image
 
 bigimg = Image.new('L',(imgx,imgy))
-		
+bigimg.paste(128,(0,0,imgx,imgy))
+
+
 for x,y in tiles.items():
 	if y:
 		topx = (x[0] -minx) * 2048 
@@ -103,7 +125,9 @@ for x,y in tiles.items():
 		print (topx,topy,topx+2048,topy+2048)
 		print smallimg.size
 		bigimg.paste(smallimg, (topx,topy))
-				 
+
+os.chdir("..")
+
 bigimg.save("big.png")
 big2 = bigimg.resize((imgx/3,imgy/3))
 print "resize"
