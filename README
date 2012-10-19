@@ -1,0 +1,5 @@
+Small random projects and software
+=============
+
+libmh			-		Small ILP wrapper library for cplex and gurobi
+xkcd_big_comic	-		Skript fetching the xkcd comic 1110
